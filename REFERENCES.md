@@ -2,6 +2,9 @@
 
 | Reference | License | Used for | Copied code? |
 |---|---|---|---|
-| actions-starter-workflows | pending | architecture/tooling/benchmark reference | no |
+| [actionlint](https://github.com/rhysd/actionlint) | MIT | workflow syntax and expression analysis adapter | no |
+| [zizmor](https://github.com/zizmorcore/zizmor) | MIT | GitHub Actions security analysis adapter and JSON contract | no |
+| [GitHub Actions security hardening](https://docs.github.com/en/actions/security-for-github-actions/security-guides/security-hardening-for-github-actions) | GitHub documentation | least privilege, token, and untrusted input policy | no |
+| [PyYAML](https://pyyaml.org/wiki/PyYAMLDocumentation) | MIT | safe local YAML parsing | no |
 
-Implementation, fixtures, benchmark scripts and reported results must be project-specific.
+The implementation, fixtures, benchmark script, and reported result are project-specific. Tool versions are pinned in `Dockerfile`; the benchmark records actual tool availability and Python environment.

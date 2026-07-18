@@ -1,0 +1,25 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Build guardrails image
+        run: docker build --tag ci-cd-templates:ci .
+      - name: Run strict validator
+        run: docker run --rm ci-cd-templates:ci validate --strict
+      - name: Run deterministic benchmark
+        run: docker run --rm ci-cd-templates:ci benchmark --runs 1 --warmup 0 --no-external --stdout

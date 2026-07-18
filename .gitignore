@@ -1,8 +1,10 @@
 __pycache__/
 .pytest_cache/
 .ruff_cache/
+.mypy_cache/
 .venv/
 benchmarks/results/*.json
+!benchmarks/results/guardrails-baseline.json
 dist/
 target/
 build/

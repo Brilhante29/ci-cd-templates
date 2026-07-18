@@ -2,66 +2,63 @@
 
 Project: `24 - ci-cd-templates`
 
-## Principal Agent Summary
+## Principal summary
 
-- Objective:
-- Portfolio program:
-- Public proof claim:
-- Primary benchmark:
-- Default runnable path:
+- Objective: validate GitHub Actions workflows before merge.
+- Portfolio program: `delivery-observability-infra`.
+- Public proof claim: deterministic local guardrails plus optional actionlint/zizmor analysis.
+- Primary benchmark: median `scan_time_ms` and total findings.
+- Default runnable path: `docker run --rm ci-cd-templates`.
 
-## Subagent Decisions
+## Decisions and evidence
 
-| Role | Decision | Evidence Path | Status |
+| Role | Decision | Evidence | Status |
 |---|---|---|---|
-| `program-planner` |  | `project.yaml`, `sdd/spec.md` | pending |
-| `architecture-selector` |  | `sdd/architecture-decision.md` | pending |
-| `engineering-principles-reviewer` |  | `project.yaml`, `sdd/technical-decision.md` | pending |
-| `stack-decision-agent` |  | `project.yaml`, `sdd/technical-decision.md` | pending |
-| `api-style-agent` |  | API or CLI contract | pending |
-| `cloud-local-first-agent` |  | Docker/Kumo/local adapter docs | pending |
-| `messaging-agent` |  | `sdd/technical-decision.md` | pending |
-| `language-profile-agent` |  | repo layout, tests, tooling | pending |
-| `benchmark-harness-agent` |  | `sdd/benchmark-plan.md`, `benchmarks/results/` | pending |
-| `design-system-agent` |  | `README.md`, diagrams | pending |
-| `security-reuse-reviewer` |  | `REFERENCES.md`, release checklist | pending |
-| `release-ci-publisher` |  | validation and CI | pending |
+| program-planner | delivery-observability-infra | `project.yaml` | complete |
+| architecture-selector | modular pipeline | `sdd/architecture-decision.md` | complete |
+| engineering-principles-reviewer | SOLID, DRY, KISS, YAGNI, and Demeter recorded | `sdd/technical-decision.md` | complete |
+| stack-decision-agent | Python CLI with PyYAML and standard library | `project.yaml` | complete |
+| api-style-agent | CLI with JSON contract | `sdd/technical-decision.md` | complete |
+| cloud-local-first-agent | no cloud or credential path | `Dockerfile` | complete |
+| messaging-agent | none | `project.yaml` | complete |
+| language-profile-agent | typed Python package under `src/` | `pyproject.toml` | complete |
+| benchmark-harness-agent | fixed fixtures, median, environment, digest | `sdd/benchmark-plan.md` | complete |
+| security-reuse-reviewer | pinned tools, safe loader, no secrets | `REFERENCES.md` | complete |
+| release-ci-publisher | strict validator and CI workflow | `.github/workflows/ci.yml` | complete |
 
-## Local-First Runtime
+## Local-first runtime
 
-- Docker command:
-- Local services:
-- Kumo services, if any:
-- Real cloud adapter target, if any:
-- Config switch:
-- Default path requires paid secret: no
+- Docker command: `docker build -t ci-cd-templates .; docker run --rm ci-cd-templates`.
+- Local services: none.
+- Cloud credentials: none.
+- Config switch: `--no-external` selects policy-only mode.
 
-## Architecture Boundaries
+## Boundaries
 
-- Domain boundaries:
-- Use-case boundaries:
-- Ports:
-- Adapters:
-- Dependency direction rule:
+- Loader: safe YAML plus source locations.
+- Policy: local rules and immutable findings.
+- Adapters: actionlint and zizmor subprocesses.
+- Application: scanner, benchmark, and strict validator.
+- Delivery: CLI, Docker, and GitHub Actions.
 
-## Benchmark Handoff
+## Benchmark handoff
 
-- Metric:
-- Unit:
-- Higher or lower is better:
-- Command:
-- Result path:
-- Dataset or fixture:
+- Metric: `scan_time_ms`.
+- Unit: milliseconds.
+- Higher or lower is better: lower time, while findings are a correctness count.
+- Result: `benchmarks/results/guardrails-baseline.json`.
+- Fixture: `benchmarks/fixtures/` with a recorded SHA-256 digest.
 
-## Open Risks
+## Risks
 
-- 
+- A new external-tool release can change findings; update the Docker pin and benchmark together.
+- Docker daemon availability is required only to exercise the image, not for local policy tests.
 
-## Publication Gates
+## Publication gates
 
-- [ ] Docker path works
-- [ ] benchmark result exists
-- [ ] README starts with number, claim, and benchmark
-- [ ] references are documented
-- [ ] no secret in files or git remote
-- [ ] validation passes
+- [x] Docker path is documented.
+- [x] Benchmark result exists.
+- [x] README starts with number, claim, and benchmark.
+- [x] References are documented.
+- [x] No credential is required by the default path.
+- [x] Strict validation and unit tests are wired.

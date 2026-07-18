@@ -1,0 +1,9 @@
+.git
+.portfolio
+.portfolio-control
+.codex
+.claude
+__pycache__
+.pytest_cache
+.ruff_cache
+*.pyc

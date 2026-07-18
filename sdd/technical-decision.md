@@ -1,120 +1,43 @@
 # Technical Decision
 
-## Status
+## Selected stack
 
-Proposed
+Python 3.10+, PyYAML, `unittest`, Docker, actionlint 1.7.12, and zizmor 1.26.1.
 
-## Decision Type
+Python is the smallest typed runtime that supports safe YAML parsing, subprocess control, JSON output, and fast fixture-driven tests. PyYAML is used for parsed data and composed-node source locations. The standard library handles the rest to keep the default path local and auditable.
 
-`<stack|api-style|cloud|messaging|database|library|runtime|framework>`
+## Interfaces
 
-## Context
+- API style: CLI.
+- Contract: JSON scan and benchmark objects emitted by `models.py` and `benchmark.py`.
+- Messaging: none.
+- Storage: none.
+- Cloud: none. The image runs without network after build and needs no credentials.
 
-Project: `<project-name>`
-Problem: `<problem to solve>`
-Portfolio program: `<program>`
-Public signal: `<GitHub/LinkedIn proficiency signal>`
-Benchmark: `<metric>`
+## Engineering principles
 
-## Selected Option
+- SRP: loader, policies, tool adapters, scanner, benchmark, and validator have separate reasons to change.
+- OCP: external tools are optional adapters and policy findings use one immutable model.
+- LSP: unavailable tools and available tools both return a `ToolStatus`; scan composition stays valid.
+- ISP: policy code receives only a `WorkflowDocument`; tool adapters receive paths and a working directory.
+- DIP: CLI depends on scanner and benchmark functions, not on subprocess details.
+- DRY: finding construction, severity ordering, path ordering, and JSON serialization are centralized.
+- KISS: one process, one fixture set, and one output contract are enough to prove the claim.
+- YAGNI: no database, API server, hosted dashboard, auto-fixer, or cloud adapter is included.
+- Law of Demeter: policies access direct workflow/job/step mappings and do not traverse framework objects.
 
-Selected: `<option>`
+## Security boundaries
 
-Reason:
+- `yaml_loader.py` uses `SafeLoader` and changes only YAML boolean resolution so GitHub's `on` key is not converted to `True`.
+- External analyzers receive file paths, not credentials or tokens.
+- Docker uses pinned versions and does not copy `.git`, `.portfolio`, or `.portfolio-control` into the image.
+- The CI workflow uses full commit SHAs and `persist-credentials: false`.
 
-`<Why this option fits the problem, benchmark, and public signal.>`
+## Rejected options
 
-## Decision Brain Fields
-
-- Stack profile: `<spring-kotlin-backend|fastapi-backend|go-backend|node-typescript-backend|angular|nextjs|python-ml|terraform>`
-- API style: `<rest-http|graphql|grpc|websocket|sse|cli>`
-- Messaging: `<none|outbox-only|rabbitmq|kafka|redis-streams|nats>`
-- Cloud mode: `<none|kumo-local-first|adapter-fake|real-cloud-required>`
-- Database/runtime: `<selection>`
-- Library policy: `<selection>`
-
-## Engineering Principles
-
-Coupling boundary:
-
-`<Domain/use cases must not depend on framework, DB, broker, cloud SDK, transport, or UI.>`
-
-SOLID application:
-
-- SRP: `<how responsibilities are split>`
-- OCP: `<how behavior extends without rewriting stable policy>`
-- LSP: `<how adapters/fakes/reals stay substitutable>`
-- ISP: `<small ports/interfaces used>`
-- DIP: `<high-level policy depends on abstractions>`
-
-Simplicity:
-
-- KISS: `<simplest design that proves the claim>`
-- YAGNI: `<future abstraction intentionally not added>`
-- DRY: `<duplicated business knowledge removed without premature abstraction>`
-
-Testability evidence:
-
-- `<use case test without transport/infrastructure>`
-- `<adapter or contract test>`
-## Rejected Options
-
-| Option | Why rejected |
+| Option | Reason |
 |---|---|
-| `<option>` | `<reason>` |
-| `<option>` | `<reason>` |
-
-## API Contract
-
-Contract artifact:
-
-`<OpenAPI|GraphQL schema|protobuf|event contract|CLI output schema|none>`
-
-GraphQL controls, when applicable:
-
-- Query complexity/depth limit: `<yes|no|not applicable>`
-- N+1 prevention: `<DataLoader/batching plan|not applicable>`
-- Field-level auth rule: `<yes|no|not applicable>`
-
-## Cloud Local-First
-
-Local provider:
-
-`<kumo|none|adapter fake>`
-
-Real provider target:
-
-`<aws|none|other>`
-
-Config switch:
-
-```txt
-CLOUD_PROVIDER=<kumo|aws|none>
-CLOUD_ENDPOINT=http://localhost:4566
-```
-
-Unsupported local behaviors:
-
-- `<behavior or none>`
-
-## Benchmark Impact
-
-Expected impact:
-
-- `<metric/result this decision should improve or clarify>`
-
-Validation command:
-
-```powershell
-<command>
-```
-
-## Operational Cost
-
-- Docker services added: `<none|kumo|postgres|redis|rabbitmq|redpanda|...>`
-- Local demo complexity: `<low|medium|high>`
-- Failure case required: `<yes|no>`
-
-## Follow-up
-
-- `<what must be revisited if benchmark fails>`
+| Rust | A binary is attractive, but Python reduces policy and fixture iteration cost for this portfolio project. |
+| actionlint-only | It does not express the repository-specific least-privilege and shell-input policy. |
+| zizmor-only | It does not replace structural YAML and project release validation. |
+| GitHub API integration | It would require credentials and make the default benchmark non-local. |

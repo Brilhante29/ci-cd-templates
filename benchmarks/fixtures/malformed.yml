@@ -1,0 +1,9 @@
+name: fixture-malformed
+on: [push]
+jobs:
+  broken:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "unterminated"
+        with: [not-a-mapping
