@@ -10,8 +10,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 RUN apt-get update \
     && apt-get install --no-install-recommends --yes ca-certificates curl \
     && case "$(dpkg --print-architecture)" in \
-         amd64) actionlint_arch="x86_64" ;; \
-         arm64) actionlint_arch="aarch64" ;; \
+         amd64) actionlint_arch="amd64" ;; \
+         arm64) actionlint_arch="arm64" ;; \
          *) echo "unsupported architecture" >&2; exit 1 ;; \
        esac \
     && curl --fail --silent --show-error --location \
