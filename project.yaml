@@ -6,7 +6,7 @@ program:
   shared_assets:
     - deterministic GitHub Actions scan contract
     - Dockerized release validation path
-status: published
+status: benchmarked
 claim: validate GitHub Actions workflows before merge with deterministic local policies and optional external analyzers
 stack:
   - Python 3.10+
