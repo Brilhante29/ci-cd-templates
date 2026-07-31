@@ -28,7 +28,10 @@ def _run(command: list[str], cwd: Path) -> tuple[subprocess.CompletedProcess[str
     environment = dict(os.environ)
     for key in ("GH_TOKEN", "GITHUB_TOKEN", "ZIZMOR_GITHUB_TOKEN"):
         environment.pop(key, None)
-    environment.update({"NO_COLOR": "1", "CI": "1", "ZIZMOR_OFFLINE": "1"})
+    # ZIZMOR_OFFLINE backs a boolean flag, so it must hold a value clap can parse
+    # as a bool. "1" makes zizmor exit 2 with a usage error, which the scanner
+    # then reports as a high-severity "<tool>" finding and fails --strict.
+    environment.update({"NO_COLOR": "1", "CI": "1", "ZIZMOR_OFFLINE": "true"})
     completed = subprocess.run(
         command,
         cwd=cwd,

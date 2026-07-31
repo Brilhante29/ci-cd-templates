@@ -30,6 +30,9 @@ COPY .github ./.github
 COPY sdd ./sdd
 COPY project.yaml ./project.yaml
 COPY tools ./tools
+# validate --strict requires Dockerfile in the validated root and scans its
+# contents for credential material, so the image must carry it.
+COPY Dockerfile ./Dockerfile
 
 RUN pip install --no-cache-dir .
 
