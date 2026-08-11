@@ -124,6 +124,8 @@ benchmark:
   unit: milliseconds
   command: python -m ci_guardrails benchmark --fixtures benchmarks/fixtures --runs 3 --warmup 1
   result_path: benchmarks/results/guardrails-baseline.json
+  publication_result_path: benchmarks/publication/guardrails-baseline-v2.json
+  evidence_status: current
 release:
   docker: Dockerfile with pinned actionlint and zizmor versions
   no_secret_default_path: true
