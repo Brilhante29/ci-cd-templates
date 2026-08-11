@@ -2,12 +2,12 @@
   "command": "python -m ci_guardrails benchmark --fixtures benchmarks/fixtures --runs 3 --warmup 1 --no-external",
   "deterministic": true,
   "environment": {
-    "actionlint": "unavailable",
+    "actionlint": "1.7.12",
     "ci": "false",
-    "platform": "Windows-10-10.0.26200-SP0",
-    "processor": "AMD64 Family 23 Model 104 Stepping 1, AuthenticAMD",
-    "python": "3.10.11",
-    "zizmor": "unavailable"
+    "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.41",
+    "processor": "unknown",
+    "python": "3.12.13",
+    "zizmor": "zizmor 1.26.1"
   },
   "external_tools": false,
   "findings": {
@@ -35,20 +35,20 @@
   "project": "#24 ci-cd-templates",
   "repeat": 3,
   "samples": [
-    16.601,
-    18.541,
-    18.431
+    15.08,
+    15.279,
+    11.311
   ],
   "schema_version": 1,
   "summary": {
     "findings": 7,
-    "max_ms": 18.541,
-    "median_ms": 18.431,
-    "min_ms": 16.601,
+    "max_ms": 15.279,
+    "median_ms": 15.08,
+    "min_ms": 11.311,
     "workflow_files": 3
   },
-  "timestamp": "2026-07-18T18:21:30.465961Z",
+  "timestamp": "2026-08-11T01:06:30.764788Z",
   "unit": "ms",
-  "value": 18.431,
+  "value": 15.08,
   "warmup": 1
 }
