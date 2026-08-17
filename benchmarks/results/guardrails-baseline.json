@@ -1,0 +1,70 @@
+{
+  "command": "python -m ci_guardrails benchmark --fixtures benchmarks/fixtures --templates .github/workflows --runs 3 --warmup 1 --no-external",
+  "deterministic": true,
+  "environment": {
+    "actionlint": "1.7.12",
+    "ci": "false",
+    "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.41",
+    "processor": "unknown",
+    "python": "3.12.13",
+    "zizmor": "zizmor 1.26.1"
+  },
+  "external_tools": false,
+  "findings": {
+    "by_severity": {
+      "high": 5,
+      "low": 0,
+      "medium": 2,
+      "total": 7
+    },
+    "by_source": {
+      "policy": 7
+    },
+    "total": 7
+  },
+  "fixture": {
+    "files": [
+      "malformed.yml",
+      "policy-violations.yml",
+      "secure.yml"
+    ],
+    "path": "benchmarks/fixtures",
+    "sha256": "b78ea1f9a02cc8cee786b8cbd10c6c54b8dc8cec8876eb6ab8ca23c089171a6b"
+  },
+  "metric": "scan_time_ms",
+  "project": "#24 ci-cd-templates",
+  "repeat": 3,
+  "samples": [
+    104.945,
+    103.531,
+    152.502
+  ],
+  "schema_version": 1,
+  "summary": {
+    "findings": 7,
+    "fixture_workflows": 3,
+    "max_ms": 152.502,
+    "median_ms": 104.945,
+    "min_ms": 103.531,
+    "reusable_workflows": 5,
+    "scanned_workflows": 9,
+    "template_findings": 0
+  },
+  "templates": {
+    "files": [
+      "ci.yml",
+      "reusable-go.yml",
+      "reusable-jvm-gradle.yml",
+      "reusable-node.yml",
+      "reusable-python.yml",
+      "reusable-terraform.yml"
+    ],
+    "findings": 0,
+    "path": ".github/workflows",
+    "sha256": "ec27fe9ab70a76073578d60996df21510d881a4868106048170740d5a31851d7"
+  },
+  "timestamp": "2026-08-17T06:18:44.805320Z",
+  "unit": "ms",
+  "value": 104.945,
+  "warmup": 1
+}

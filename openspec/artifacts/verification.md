@@ -11,6 +11,6 @@
 - [x] The offline non-root image reports zero findings for all repository workflows.
 - [x] `.portfolio-control` was preserved without edits.
 
-## Known environment limitation
+## Environment Result
 
-The local Docker daemon is not accessible in this execution session. Dockerfile syntax and pinned commands are present, but image build/runtime must be exercised on a host with Docker access.
+The pinned image built and ran locally. Its strict gate passed Ruff, mypy, 18 tests, 97% core coverage, actionlint `1.7.12`, zizmor `1.26.1`, non-root execution, and offline default scanning. Hosted execution remains the exact-head GitHub Actions release gate.

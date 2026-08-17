@@ -7,7 +7,7 @@ program:
     - deterministic GitHub Actions scan contract
     - reusable Python, Go, Node, JVM Gradle, and Terraform workflows
     - Dockerized release validation path
-status: implemented
+status: published
 claim: execute five reusable stack workflows and validate their GitHub Actions security before merge with deterministic local policies
 stack:
   - Python 3.12.13
@@ -130,9 +130,12 @@ benchmark:
   command: python -m ci_guardrails benchmark --fixtures benchmarks/fixtures --templates .github/workflows --runs 3 --warmup 1 --no-external
   result_path: benchmarks/results/guardrails-baseline.json
   publication_result_path: benchmarks/publication/guardrails-baseline-v2.json
-  evidence_status: pending
+  evidence_status: current
 release:
   docker: Dockerfile with pinned actionlint and zizmor versions
   no_secret_default_path: true
   readme_has_number: true
   references_documented: true
+  evidence_source_commit: 8bfd94a1a8fd6186b717bc7be53d61e92d419b2d
+  evidence_image_digest: sha256:c075a917595faf3e84c5189306eb59c422e051cabaefbc6ea7f75b46d58ae70f
+  evidence_image_size_bytes: 253707346

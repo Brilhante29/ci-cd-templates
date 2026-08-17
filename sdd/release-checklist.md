@@ -6,7 +6,7 @@
 - [x] Five repository-owned stack fixtures are called by CI.
 - [x] Non-root offline Docker default returns zero findings.
 - [x] Ruff, mypy, 18 tests, and at least 90% coverage pass.
-- [ ] Source-locked three-run V1/V2 evidence is generated.
-- [ ] README opens with canonical latency and correctness numbers.
+- [x] Source-locked three-run V1/V2 evidence is generated.
+- [x] README opens with canonical latency and correctness numbers.
 - [ ] Exact final `main` GitHub Actions run passes all jobs.
 - [ ] Reuse kit records publication and promotes `ci-profile-v1`.

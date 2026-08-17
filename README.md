@@ -1,12 +1,22 @@
 # #24 ci-cd-templates
 
-**Source gate:** `5` reusable workflows, `6` workflow files scanned, `0` template findings, and `7/7` expected findings detected in the unsafe policy fixtures.
+**Benchmark:** `104.945 ms` median scan latency across `3` measured runs after `1` warmup.
+
+**Correctness gate:** `5` reusable workflows, `6` workflow files scanned, `0` template findings, and `7/7` expected findings detected in the unsafe policy fixtures.
 
 **Benchmark metric:** `scan_time_ms` measures one deterministic pass over the policy fixtures and all reusable workflow files; `findings` and `template_findings` are correctness gates.
 
 **Proves:** one repository can execute and govern reusable GitHub Actions pipelines for Python, Go, Node, JVM/Gradle, and Terraform while keeping the security gate offline, deterministic, and free of credentials.
 
-The source is implemented. Canonical latency and immutable Docker provenance are generated only after the clean implementation commit so the public number cannot describe stale code.
+| Result | Value |
+|---|---:|
+| Median scan latency | `104.945 ms` |
+| Range | `103.531-152.502 ms` |
+| Scanned files | `9` (`3` fixtures + `6` workflows) |
+| Unsafe-fixture findings | `7/7` |
+| Template findings | `0` |
+
+The [V1 result](benchmarks/results/guardrails-baseline.json) and [V2 publication record](benchmarks/publication/guardrails-baseline-v2.json) bind these numbers to source commit `8bfd94a1a8fd6186b717bc7be53d61e92d419b2d` and image digest `sha256:c075a917595faf3e84c5189306eb59c422e051cabaefbc6ea7f75b46d58ae70f`.
 
 ## Reusable Workflows
 
@@ -19,6 +29,14 @@ The source is implemented. Canonical latency and immutable Docker provenance are
 | `reusable-terraform.yml` | Terraform `1.14.8` | format, offline init, validate |
 
 Every external action is pinned to a full commit SHA. Checkout persistence is disabled, permissions are read-only, jobs are time-bounded, and the repository's own CI calls all five workflows against minimal fixtures.
+
+Consume a workflow by immutable source commit:
+
+```yaml
+jobs:
+  verify:
+    uses: Brilhante29/ci-cd-templates/.github/workflows/reusable-python.yml@8bfd94a1a8fd6186b717bc7be53d61e92d419b2d
+```
 
 ## Run
 
