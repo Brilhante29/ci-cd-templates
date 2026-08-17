@@ -8,5 +8,5 @@
 - [x] Ruff, mypy, 18 tests, and at least 90% coverage pass.
 - [x] Source-locked three-run V1/V2 evidence is generated.
 - [x] README opens with canonical latency and correctness numbers.
-- [ ] Exact final `main` GitHub Actions run passes all jobs.
+- [x] Exact `main` GitHub Actions run `32001384692` passes all six jobs.
 - [ ] Reuse kit records publication and promotes `ci-profile-v1`.

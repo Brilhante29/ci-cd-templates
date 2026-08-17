@@ -12,6 +12,7 @@ Publish #24 as the first repository in Delivery, Observability, and Infrastructu
 - Ruff, mypy, 18 tests, and 97% unit coverage pass in the pinned container.
 - Source-locked V1/V2 evidence records `104.945 ms` median latency, `7/7` fixture findings, and zero template findings.
 - Evidence points to source `8bfd94a1a8fd6186b717bc7be53d61e92d419b2d` and image `sha256:c075a917595faf3e84c5189306eb59c422e051cabaefbc6ea7f75b46d58ae70f`.
+- GitHub Actions run `32001384692` passed validation and all five reusable workflow jobs on `main`.
 
 ## Boundaries
 
@@ -22,6 +23,4 @@ Publish #24 as the first repository in Delivery, Observability, and Infrastructu
 
 ## Remaining
 
-1. Commit evidence, final README numbers, and `published` status.
-2. Push `main` and verify all six jobs at the exact final SHA.
-3. Record publication and promote `ci-profile-v1` in the reuse kit.
+1. Record publication and promote `ci-profile-v1` in the reuse kit.
