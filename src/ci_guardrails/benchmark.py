@@ -6,12 +6,14 @@ import os
 import platform
 import statistics
 import time
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from .scanner import scan, workflow_files
 from .tools import _version
+
+UTC = timezone.utc
 
 
 def _display_path(path: Path) -> str:

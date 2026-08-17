@@ -26,8 +26,10 @@ import subprocess
 import sys
 import time
 import uuid
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
+
+UTC = timezone.utc
 
 
 def sha256_bytes(value: bytes) -> str:

@@ -35,6 +35,11 @@ extend-exclude = [".portfolio", ".codex", ".claude"]
 [tool.ruff.lint]
 ignore = ["EXE002"]
 
+[tool.ruff.lint.per-file-ignores]
+# Evidence generation remains importable by the host Python 3.10 launcher.
+"src/ci_guardrails/benchmark.py" = ["UP017"]
+"tools/benchmark_v2.py" = ["UP017"]
+
 [tool.mypy]
 python_version = "3.12"
 strict = true
