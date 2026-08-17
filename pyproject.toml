@@ -1,14 +1,25 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools==84.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "ci-cd-templates"
-version = "0.1.0"
-description = "Deterministic GitHub Actions guardrails with local and external analyzers."
+version = "1.0.0"
+description = "Executable reusable GitHub Actions workflows with deterministic local guardrails."
 readme = "README.md"
-requires-python = ">=3.10"
-dependencies = ["PyYAML>=6.0,<7"]
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "jsonschema==4.26.0",
+  "PyYAML==6.0.3",
+]
+
+[project.optional-dependencies]
+dev = [
+  "coverage==7.15.4",
+  "mypy==2.3.1",
+  "ruff==0.16.3",
+  "types-PyYAML==6.0.12.20260815",
+]
 
 [project.scripts]
 ci-guardrails = "ci_guardrails.cli:main"
@@ -18,9 +29,27 @@ where = ["src"]
 
 [tool.ruff]
 line-length = 100
-target-version = "py310"
+target-version = "py312"
+extend-exclude = [".portfolio", ".codex", ".claude"]
+
+[tool.ruff.lint]
+ignore = ["EXE002"]
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.12"
 strict = true
 packages = ["ci_guardrails"]
+
+[tool.coverage.run]
+branch = true
+source = ["ci_guardrails"]
+omit = [
+  "src/ci_guardrails/__main__.py",
+  "src/ci_guardrails/cli.py",
+  "src/ci_guardrails/tools.py",
+  "src/ci_guardrails/validation.py",
+]
+
+[tool.coverage.report]
+fail_under = 90
+show_missing = true

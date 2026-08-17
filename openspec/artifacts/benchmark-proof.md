@@ -3,9 +3,9 @@
 Command:
 
 ```text
-python -m ci_guardrails benchmark --fixtures benchmarks/fixtures --runs 3 --warmup 1
+python -m ci_guardrails benchmark --fixtures benchmarks/fixtures --templates .github/workflows --runs 3 --warmup 1 --no-external
 ```
 
 Evidence: `benchmarks/results/guardrails-baseline.json`.
 
-The input is the three-file repository-owned fixture set. The result includes the SHA-256 fixture digest, median and sample `scan_time_ms`, findings by source/severity, Python/platform/tool versions, and whether external analyzers were enabled. `--no-external` isolates the deterministic local policy baseline.
+The input is the three-file policy fixture set plus five reusable workflows and the CI caller. The result includes both SHA-256 input digests, all `scan_time_ms` samples, findings by source/severity, zero template findings, and the pinned runtime. `--no-external` isolates the deterministic local policy baseline.

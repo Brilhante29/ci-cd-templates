@@ -1,80 +1,66 @@
 # #24 ci-cd-templates
 
-Status: benchmarked
+**Source gate:** `5` reusable workflows, `6` workflow files scanned, `0` template findings, and `7/7` expected findings detected in the unsafe policy fixtures.
 
-Claim: validate GitHub Actions workflows before merge with deterministic local policies and optional actionlint/zizmor analysis.
+**Benchmark metric:** `scan_time_ms` measures one deterministic pass over the policy fixtures and all reusable workflow files; `findings` and `template_findings` are correctness gates.
 
-Benchmark result: the fixed fixture set is scanned in `scan_time_ms`; the committed JSON records the measured median and the total findings for the exact environment.
+**Proves:** one repository can execute and govern reusable GitHub Actions pipelines for Python, Go, Node, JVM/Gradle, and Terraform while keeping the security gate offline, deterministic, and free of credentials.
 
-| Metric | Result | Unit |
-|---|---:|---|
-| scan_time_ms | 18.431 | milliseconds |
-| findings | 7 | count |
+The source is implemented. Canonical latency and immutable Docker provenance are generated only after the clean implementation commit so the public number cannot describe stale code.
 
-The baseline uses three local fixtures with five high-severity and two medium-severity policy findings. The exact Python/platform/tool environment and fixture SHA-256 are in `benchmarks/results/guardrails-baseline.json`.
+## Reusable Workflows
 
-## 1. Problem
+| Workflow | Runtime | Executed proof |
+|---|---|---|
+| `reusable-python.yml` | Python `3.12.13` | Ruff, mypy, unittest, coverage `>=90%` |
+| `reusable-go.yml` | Go `1.26.0` | gofmt and `go test ./...` |
+| `reusable-node.yml` | Node `24.13.0` | lockfile install and native tests |
+| `reusable-jvm-gradle.yml` | Java `21`, Gradle `9.3.1` | isolated Gradle `check` |
+| `reusable-terraform.yml` | Terraform `1.14.8` | format, offline init, validate |
 
-Workflow failures are often found after merge because YAML syntax, permissions, action references, and shell interpolation are reviewed by different tools. This project provides one local command that returns stable JSON and fails the merge gate on high-risk findings.
+Every external action is pinned to a full commit SHA. Checkout persistence is disabled, permissions are read-only, jobs are time-bounded, and the repository's own CI calls all five workflows against minimal fixtures.
 
-## 2. Run Locally
-
-```powershell
-python -m pip install -e .
-python -m ci_guardrails scan .github/workflows --deterministic
-python -m ci_guardrails validate --strict
-```
-
-The local policy engine has no credential or network requirement. `actionlint` and `zizmor` are used automatically when present and are reported as unavailable otherwise.
-
-## 3. Docker
+## Run
 
 ```powershell
 docker build -t ci-cd-templates .
-docker run --rm ci-cd-templates
-docker run --rm ci-cd-templates validate --strict
-docker run --rm ci-cd-templates benchmark --stdout
+docker run --rm --network none ci-cd-templates
+docker run --rm --network none ci-cd-templates validate --strict
+docker run --rm --network none ci-cd-templates benchmark --no-external --stdout
 ```
 
-The image pins `actionlint 1.7.12` and `zizmor 1.26.1`; it contains no credentials and does not contact GitHub at runtime.
+The default container runs as UID `10001`, has no token or network requirement, and scans the six files under `.github/workflows` with local policy, actionlint, and offline zizmor adapters.
 
-## 4. CLI Contract
+## Guardrail Contract
 
-| Command | Purpose | Exit behavior |
-|---|---|---|
-| `scan PATH` | Parse workflows, apply local policies, and run available analyzers | non-zero at high findings by default |
-| `benchmark` | Scan `benchmarks/fixtures` three times and write JSON | zero when the fixture set is readable |
-| `validate --strict` | Check docs, manifest, benchmark evidence, tests, and project workflows | non-zero on release-gate failures |
+- Parse YAML safely and preserve source locations.
+- Require workflow name, trigger, jobs, least-privilege permissions, and bounded executable jobs.
+- Require full 40-character SHAs for actions and remote reusable workflows.
+- Reject `pull_request_target`, `write-all`, persisted checkout credentials, inline credentials, and untrusted event interpolation in shell commands.
+- Keep local reusable-workflow calls valid while enforcing timeout inside the called workflow.
 
-Use `--no-external` for an analyzer-independent baseline. Deterministic mode sorts files and findings and fixes the fixture selection; measured time remains environment-dependent and is recorded in the result.
+The three policy fixtures intentionally contain `5` high and `2` medium findings. The five reusable workflows must produce zero findings; the benchmark fails closed when they do not.
 
-## 5. Guardrails
+## Architecture
 
-- YAML must be a workflow mapping with `name`, `on`, and `jobs`.
-- Top-level permissions are required and `write-all` is forbidden.
-- Actions and reusable workflows must use a full 40-character commit SHA.
-- `pull_request_target` and untrusted event interpolation into `run` are high-risk.
-- Jobs have bounded timeouts and checkout must disable persisted credentials.
-- Docker is the delivery boundary; no cloud service or secret is needed for the default path.
-
-## 6. Architecture
-
-```text
-workflow files -> safe YAML loader -> local policies -> actionlint/zizmor adapters -> sorted findings -> JSON benchmark
+```mermaid
+flowchart LR
+  Consumer["Stack repository"] --> Reusable["Reusable workflow"]
+  Reusable --> Runtime["Pinned runtime and tests"]
+  Files["Workflow YAML"] --> Loader["Safe YAML loader"]
+  Loader --> Policies["Local policy core"]
+  Policies --> Adapters["actionlint and zizmor adapters"]
+  Adapters --> Evidence["V1 result and V2 provenance"]
 ```
 
-The architecture is a modular pipeline. Policy code is independently testable; subprocess integration is isolated in `tools.py`; the CLI only composes modules.
+The reusable workflows and Python scanner share contracts, not source code. Models and policies do not import CLI, subprocess, Docker, or GitHub APIs. Scanner composition depends inward; analyzer processes remain adapters. SRP separates parsing, policy, tools, orchestration, benchmark, and transport. LSP is not claimed because no inheritance hierarchy exists. KISS and YAGNI exclude a server, database, broker, cloud account, and automatic workflow mutation.
 
-## 7. Evidence
+## Evidence
 
-- Specification and scope: `sdd/spec.md`
-- Architecture record: `sdd/architecture-decision.md`
-- Stack and principles: `sdd/technical-decision.md`
-- Benchmark protocol: `sdd/benchmark-plan.md`
-- OpenSpec artifacts: `openspec/artifacts/`
-- Release validation: `tools/validate-project.ps1` and `ci-guardrails validate --strict`
-- Reuse decisions: `sdd/reuse-improvement-review.md`
+- Benchmark protocol: [`sdd/benchmark-plan.md`](sdd/benchmark-plan.md)
+- Architecture decision: [`sdd/architecture-decision.md`](sdd/architecture-decision.md)
+- Stack decision: [`sdd/technical-decision.md`](sdd/technical-decision.md)
+- Reuse review: [`sdd/reuse-improvement-review.md`](sdd/reuse-improvement-review.md)
+- Sources and licenses: [`REFERENCES.md`](REFERENCES.md)
 
-## 8. License and References
-
-See `LICENSE` and `REFERENCES.md`.
+The benchmark measures static validation latency, not the hosted duration of arbitrary consumer builds. Actual template execution is proved by the exact-head GitHub Actions jobs, because build duration belongs to the consuming stack and runner.

@@ -26,7 +26,7 @@ import subprocess
 import sys
 import time
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 
@@ -53,13 +53,10 @@ def git_output(root: Path, *arguments: str) -> str:
 
 
 def run_docker_benchmark(root: Path, image: str, output_path: Path, runs: int, warmup: int) -> None:
-    result_dir = output_path.parent.resolve()
     command = [
         "docker",
         "run",
         "--rm",
-        "-v",
-        f"{result_dir}:/results",
         "--entrypoint",
         "python",
         image,
@@ -68,15 +65,19 @@ def run_docker_benchmark(root: Path, image: str, output_path: Path, runs: int, w
         "benchmark",
         "--fixtures",
         "benchmarks/fixtures",
+        "--templates",
+        ".github/workflows",
         "--runs",
         str(runs),
         "--warmup",
         str(warmup),
         "--no-external",
-        "--output",
-        f"/results/{output_path.name}",
+        "--stdout",
     ]
-    subprocess.run(command, cwd=root, check=True)
+    completed = subprocess.run(
+        command, cwd=root, check=True, capture_output=True, text=True
+    )
+    output_path.write_text(completed.stdout, encoding="utf-8")
 
 
 def main() -> int:
@@ -102,15 +103,8 @@ def main() -> int:
 
     root = Path(__file__).resolve().parents[1]
     source_commit = git_output(root, "rev-parse", "HEAD")
-    # Clean = no tracked file is modified, no removal pending. New untracked
-    # files (e.g. this producer script, __pycache__, egg-info) do not pollute
-    # the provenance of the benchmarked source tree, because the benchmark
-    # never reads them and Docker build copies only tracked/pinned paths.
     porcelain = git_output(root, "status", "--porcelain")
-    dirty_tracked = any(
-        line and line[0] != "?" for line in porcelain.splitlines() if line
-    )
-    if dirty_tracked:
+    if porcelain:
         raise SystemExit("benchmark requires a clean tree before it starts")
 
     output_path = root / args.output
@@ -127,7 +121,7 @@ def main() -> int:
     if not image_id.startswith("sha256:"):
         raise SystemExit(f"unexpected Docker image id: {image_id}")
 
-    started_at = datetime.now(timezone.utc)
+    started_at = datetime.now(UTC)
     started = time.perf_counter()
     run_docker_benchmark(root, args.image, v1_path, args.runs, args.warmup)
     duration = time.perf_counter() - started
@@ -144,6 +138,7 @@ def main() -> int:
         "warmup": int(args.warmup),
         "external_tools": False,
         "deterministic": True,
+        "reusable_workflows": 5,
         "concurrency": 1,
     }
 
@@ -172,6 +167,15 @@ def main() -> int:
             "failures": 0,
             "summary": findings_block,
         },
+        {
+            "name": "template_findings",
+            "value": float(summary["template_findings"]),
+            "unit": "count",
+            "direction": "target",
+            "samples": [float(summary["template_findings"])],
+            "failures": 0,
+            "summary": {"target": 0, "reusable_workflows": 5},
+        },
     ]
 
     publication = {
@@ -180,13 +184,19 @@ def main() -> int:
         "project": "ci-cd-templates",
         "benchmark_id": "ci-guardrails-scan",
         "workload": {
-            "version": "1.0.0",
+            "version": "2.0.0",
             "fixture_digest": combined_digest(
                 root,
                 [
                     "benchmarks/fixtures/malformed.yml",
                     "benchmarks/fixtures/policy-violations.yml",
                     "benchmarks/fixtures/secure.yml",
+                    ".github/workflows/ci.yml",
+                    ".github/workflows/reusable-go.yml",
+                    ".github/workflows/reusable-jvm-gradle.yml",
+                    ".github/workflows/reusable-node.yml",
+                    ".github/workflows/reusable-python.yml",
+                    ".github/workflows/reusable-terraform.yml",
                 ],
             ),
             "config_digest": sha256_bytes(
@@ -201,6 +211,7 @@ def main() -> int:
             "command": (
                 f"docker run --rm --entrypoint python {args.image} "
                 f"-m ci_guardrails benchmark --fixtures benchmarks/fixtures "
+                f"--templates .github/workflows "
                 f"--runs {args.runs} --warmup {args.warmup} --no-external"
             ),
             "started_at": started_at.isoformat().replace("+00:00", "Z"),
@@ -218,11 +229,13 @@ def main() -> int:
             "clean_tree": True,
             "image_ref": image_ref,
             "image_digest": image_id,
-            "dependency_lock_digest": combined_digest(root, ["pyproject.toml", "Dockerfile"]),
+            "dependency_lock_digest": combined_digest(
+                root, ["pyproject.toml", "constraints.lock", "Dockerfile"]
+            ),
             "producer": args.producer,
             "artifact_digest": sha256_file(v1_path),
         },
-        "comparability_key": "ci-guardrails-scan:1.0.0:policy-fixtures-3:python-3.12-slim",
+        "comparability_key": "ci-guardrails-scan:2.0.0:reusable-5:policy-fixtures-3:python-3.12-slim",
     }
     if args.ci_run_url:
         publication["provenance"]["ci_run_url"] = args.ci_run_url

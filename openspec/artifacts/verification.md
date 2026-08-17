@@ -7,6 +7,8 @@
 - [x] Docker pins actionlint and zizmor and passes no credentials.
 - [x] The project CI workflow uses full action SHAs and bounded timeout.
 - [x] Strict validation checks the manifest, docs, benchmark, tests, and workflows.
+- [x] The CI caller executes all five reusable workflow profiles.
+- [x] The offline non-root image reports zero findings for all repository workflows.
 - [x] `.portfolio-control` was preserved without edits.
 
 ## Known environment limitation

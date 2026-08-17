@@ -1,36 +1,34 @@
 # Benchmark Plan
 
-## Hypothesis
+## Question
 
-A fixed set of local workflows can be scanned before merge with a measurable time and finding count, and the input can be fingerprinted so changes are visible.
+Can the local policy core scan all reusable workflows and the fixed unsafe fixtures quickly while preserving exact input identity and rejecting any template finding?
 
 ## Command
 
 ```powershell
-python -m ci_guardrails benchmark --fixtures benchmarks/fixtures --runs 3 --warmup 1
+python tools/benchmark_v2.py --image ci-cd-templates:benchmark --runs 3 --warmup 1
 ```
 
-Use `--no-external` to compare the deterministic local policy engine across machines. The Docker command keeps external analyzer versions pinned.
+The producer builds a non-root image from a clean commit and captures JSON from an offline container. It does not mount a writable host path into the measured process.
 
-## Fixed input
+## Workload
 
-- Directory: `benchmarks/fixtures`
-- Files: `secure.yml`, `policy-violations.yml`, `malformed.yml`
-- Source: repository-owned fixtures
-- License: project license
-- Random seed: not applicable; no random sampling
-- Input digest: recorded as SHA-256 in the result JSON
+- Three policy fixtures: one malformed, one intentionally unsafe, one secure.
+- Five reusable workflows plus the repository orchestration workflow.
+- One warmup followed by three serial measured runs.
+- Local policy only for comparability; actionlint and zizmor remain release gates outside the timed section.
 
 ## Metrics
 
-| Metric | Unit | Source | Why it matters |
-|---|---:|---|---|
-| `scan_time_ms` | milliseconds | monotonic wall clock around each scan | pre-merge feedback cost |
-| `findings` | count | normalized final scan | guardrail signal |
-| `findings.by_source` | count by source | policy/actionlint/zizmor | tool contribution and drift |
+| Metric | Direction | Gate |
+|---|---|---|
+| `scan_time_ms` | lower is better | every raw sample preserved |
+| `findings` | target | exactly `7` fixture findings |
+| `template_findings` | target | exactly `0` |
 
-The reported value is the median of three measured scans after one warmup. `timestamp`, Python version, OS, tool versions, samples, and fixture digest are included in JSON.
+Hosted job duration is intentionally excluded because it depends on runner queue, dependency caches, and consumer workload. Exact-head CI is the execution proof for the five templates.
 
-## Reproducibility limits
+## Provenance
 
-Finding order and local-policy findings are deterministic. Timing depends on CPU, filesystem, Python, and analyzer availability; these are recorded in `environment`. Docker is the reference environment for pinned external tools.
+V2 binds the source commit, immutable image, dependency constraints, V1 artifact, nine workload files, effective config, runtime, architecture, and three raw latency samples.

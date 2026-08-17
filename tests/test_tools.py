@@ -1,6 +1,6 @@
 import json
-from pathlib import Path
 import unittest
+from pathlib import Path
 
 from ci_guardrails.tools import _actionlint_findings, _zizmor_findings
 

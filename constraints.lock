@@ -1,0 +1,7 @@
+setuptools==84.0.0
+jsonschema==4.26.0
+PyYAML==6.0.3
+coverage==7.15.4
+mypy==2.3.1
+ruff==0.16.3
+types-PyYAML==6.0.12.20260815

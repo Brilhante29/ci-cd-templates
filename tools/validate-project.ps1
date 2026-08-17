@@ -25,21 +25,27 @@ function Invoke-Checked {
 
 Push-Location -LiteralPath $root
 try {
-  $previousPythonPath = $env:PYTHONPATH
-  $env:PYTHONPATH = Join-Path $root "src"
-  Invoke-Checked "strict Python project validation" { python -m ci_guardrails validate --root $root --strict }
-  $env:PYTHONPATH = $previousPythonPath
+  if ($SkipDocker) {
+    $previousPythonPath = $env:PYTHONPATH
+    $env:PYTHONPATH = Join-Path $root "src"
+    Invoke-Checked "strict Python project validation" { python -m ci_guardrails validate --root $root --strict }
+    Invoke-Checked "publication evidence validation" { python tools/validate-publication.py }
+    $env:PYTHONPATH = $previousPythonPath
+  }
 
   $resultPath = Join-Path $root "benchmarks\results\guardrails-baseline.json"
-  if (-not (Test-Path -LiteralPath $resultPath -PathType Leaf)) {
-    Add-Failure "Missing benchmark JSON: benchmarks/results/guardrails-baseline.json"
-  } else {
+  if (Test-Path -LiteralPath $resultPath -PathType Leaf) {
     Invoke-Checked "benchmark JSON validation" { python -m json.tool $resultPath | Out-Null }
   }
 
   if (-not $SkipDocker -and (Test-Path -LiteralPath (Join-Path $root "Dockerfile") -PathType Leaf)) {
     $imageName = (Split-Path -Leaf $root).ToLowerInvariant()
     Invoke-Checked "docker build" { docker build -t $imageName $root | Out-Null }
+    Invoke-Checked "docker default run" { docker run --rm --network none $imageName | Out-Null }
+    Invoke-Checked "docker strict validation" { docker run --rm --network none $imageName validate --strict | Out-Null }
+    Invoke-Checked "docker publication validation" {
+      docker run --rm --network none --entrypoint python $imageName tools/validate-publication.py | Out-Null
+    }
   }
 } finally {
   Pop-Location

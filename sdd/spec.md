@@ -1,47 +1,30 @@
 # Specification: ci-cd-templates
 
-## Number and claim
-
-- Number: #24
-- Claim: validate GitHub Actions workflows before merge with deterministic local policies and optional external analyzers.
-- User: a maintainer reviewing a pull request before merge.
-
 ## Problem
 
-Workflow correctness spans YAML shape, GitHub Actions semantics, token permissions, third-party action pinning, and shell injection. A merge gate needs one command, stable findings, and a local fallback when external binaries are absent.
+Portfolio repositories repeat GitHub Actions setup and often discover malformed YAML, broad permissions, mutable action tags, or stack-specific build failures only after merge.
 
-## Scope
+## Claim
 
-In scope:
+The repository provides five executable reusable workflows for Python, Go, Node, JVM/Gradle, and Terraform, plus one deterministic offline guardrail that validates their security and structure.
 
-- Typed Python CLI with `scan`, `benchmark`, and strict `validate` commands.
-- Safe YAML parsing with source locations and local policy findings.
-- Optional `actionlint` and `zizmor` subprocess adapters with version/status evidence.
-- Fixed local fixtures and JSON benchmark containing scan time, findings, fixture digest, and environment.
-- Docker image with pinned analyzer versions and no credentials.
-- GitHub Actions CI running the same strict gate.
+## Functional Requirements
 
-Out of scope:
+1. Every reusable workflow is callable through `workflow_call`, read-only, time-bounded, and pins external actions to full commit SHAs.
+2. The repository CI calls all five workflows against repository-owned fixtures.
+3. The scanner parses YAML safely, normalizes findings, and supports optional actionlint and offline zizmor adapters.
+4. The policy core rejects dangerous triggers, broad permissions, mutable action refs, persisted checkout credentials, inline credentials, and untrusted shell interpolation.
+5. The benchmark scans three policy fixtures and all six repository workflows, preserving samples, digests, environment, and zero template findings.
 
-- Calling GitHub APIs or checking repository settings.
-- Applying automatic fixes to workflows.
-- Persisting findings in a hosted database.
-- Replacing actionlint or zizmor's complete rule sets.
+## Non-Goals
 
-## Functional requirements
+- Hosted CI orchestration, workflow mutation, organization secrets, cloud services, database, broker, or GitHub API dependency in the default path.
+- Claiming that static validation latency equals a consumer project's hosted build duration.
+- Supporting arbitrary commands supplied by untrusted workflow inputs.
 
-1. Find `.yml` and `.yaml` workflow files in stable path order.
-2. Report malformed YAML without stopping the rest of the scan.
-3. Enforce workflow name, trigger, jobs, least-privilege permissions, pinned actions, bounded jobs, safe checkout, and untrusted interpolation rules.
-4. Add external findings only when the corresponding executable is available.
-5. Emit deterministic file/finding order and machine-readable JSON.
-6. Exit non-zero for high-severity findings by default.
-7. Benchmark exactly the fixed fixture set and record the environment.
+## Acceptance
 
-## Acceptance criteria
-
-- `python -m unittest discover -s tests` passes.
-- `python -m ci_guardrails benchmark --no-external` writes `benchmarks/results/guardrails-baseline.json`.
-- `python -m ci_guardrails validate --strict` passes on the repository.
-- Docker default command scans `.github/workflows` without a secret.
-- CI uses full SHA references and calls the strict validator.
+- `docker run --rm --network none ci-cd-templates` returns zero findings.
+- The five self-test jobs pass on the exact final GitHub `main` SHA.
+- Ruff, mypy, 18 tests, and at least 90% unit coverage pass.
+- Three-run V1/V2 evidence is source-locked and reports seven expected fixture findings and zero template findings.

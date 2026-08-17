@@ -1,66 +1,26 @@
 # Architecture Decision
 
-## Status
-
-Accepted
-
-## Context
-
-Project #24 is a pre-merge guardrail for workflow files. The proof target is a reproducible scan time plus a finding count over a fixed fixture set. The system must work without GitHub, credentials, a database, or a long-running service.
-
-Problem forces:
-
-- Domain complexity: medium. Several rules share one finding contract.
-- Integration pressure: medium. actionlint and zizmor are external processes.
-- UI state complexity: none.
-- Data reproducibility: high. Fixture content and tool versions are evidence.
-- Auditability: high. Every finding includes source, rule, path, and location.
-- Throughput/async pressure: low. A merge-sized workflow set is small.
-- Independent deployability: medium. Docker packages the CLI and analyzers.
-
 ## Decision
 
-Chosen architecture: modular pipeline.
+Use two decoupled delivery planes:
 
-```text
-files
-  -> yaml_loader
-  -> policies
-  -> optional tool adapters
-  -> normalized findings
-  -> deterministic report
-```
+1. Declarative reusable GitHub workflows own stack setup and build commands.
+2. A modular Python pipeline owns workflow parsing, policy evaluation, optional analyzer adapters, and evidence.
 
-The pipeline matches the problem's data flow and keeps each proof step testable. `models.py` defines contracts, `yaml_loader.py` owns YAML behavior, `policies.py` owns repository rules, `tools.py` owns process integration, `scanner.py` composes them, and the CLI/benchmark/validation modules are delivery adapters.
+## Forces
 
-Dependency rule: domain-like models and policy functions depend on standard values only. The scanner composes adapters. The CLI, Docker image, and subprocess tools depend inward and are never imported by policies.
+- High reuse and auditability across five stacks.
+- Low runtime throughput and no persistence or asynchronous processing need.
+- GitHub-hosted execution must be proved, while security validation must also run locally and offline.
+- A consumer repository must depend on a versioned workflow ref, never this repository's Python package.
 
-## Rejected alternatives
+## Dependency Rule
 
-| Alternative | Why rejected |
-|---|---|
-| Microservices | Network, deployment, and persistence failure modes do not help a local static-analysis problem. |
-| Composite GitHub Action only | It cannot prove the same behavior from a clean local checkout. |
-| Database-backed findings service | Adds storage and credentials without improving the benchmark. |
+Models and policies depend only on typed values. YAML loading and analyzer subprocesses are adapters. Scanner and benchmark compose inward dependencies. CLI, Docker, and GitHub Actions are delivery boundaries. Reusable workflows share no source import with the scanner.
 
-## Testing strategy
+## Rejected
 
-- Unit tests isolate YAML boolean handling and every core security policy family.
-- Scanner tests prove sorted deterministic output and malformed-file tolerance.
-- Benchmark tests prove the result schema fields, fixture digest, and finding count.
-- The strict validator wires docs, manifest, tests, benchmark evidence, and the project workflow together.
-
-## Consequences
-
-Positive:
-
-- One local command is useful before merge and in CI.
-- Missing external binaries are explicit in JSON instead of silently changing the contract.
-- The fixed fixture digest makes benchmark input drift visible.
-
-Tradeoffs:
-
-- External finding counts can change with analyzer versions; Docker pins the versions used for the packaged path.
-- Scan time is machine-dependent; the environment and samples are recorded rather than hidden.
-
-Migration path: add a new analyzer through the `tools.py` adapter contract or add a policy module without changing the CLI JSON shape.
+- Microservices, API server, database, broker, Kubernetes, and cloud account: no measured requirement.
+- Composite action only: cannot model complete stack jobs or call-level permissions.
+- Dynamic shell-command inputs: create injection and comparability risks.
+- MVC, MVVM, or layered web architecture: no UI or request lifecycle exists.

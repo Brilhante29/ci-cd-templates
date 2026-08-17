@@ -2,19 +2,21 @@ id: 24
 name: ci-cd-templates
 program:
   id: delivery-observability-infra
-  narrative_fit: Reusable, auditable CI guardrails turn workflow quality into a measurable delivery capability.
+  narrative_fit: Executable multi-stack workflows plus auditable guardrails turn CI reuse into a measurable delivery capability.
   shared_assets:
     - deterministic GitHub Actions scan contract
+    - reusable Python, Go, Node, JVM Gradle, and Terraform workflows
     - Dockerized release validation path
-status: benchmarked
-claim: validate GitHub Actions workflows before merge with deterministic local policies and optional external analyzers
+status: implemented
+claim: execute five reusable stack workflows and validate their GitHub Actions security before merge with deterministic local policies
 stack:
-  - Python 3.10+
-  - PyYAML
+  - Python 3.12.13
+  - PyYAML 6.0.3
+  - jsonschema 4.26.0
   - actionlint 1.7.12
   - zizmor 1.26.1
   - Docker
-  - GitHub Actions
+  - GitHub Actions reusable workflows
 language_profile:
   primary: python
   secondary:
@@ -49,7 +51,7 @@ decision_brain:
     rejected_overengineering:
       - distributed service orchestration
       - cloud-hosted policy database
-  stack_profile: python-ml
+  stack_profile: python
   api_style: cli
   messaging: none
   cloud:
@@ -61,8 +63,8 @@ decision_brain:
     config_switch: CI_GUARDRAILS_EXTERNAL_TOOLS=0|1
     unsupported_behaviors: []
   database: none
-  runtime: Python CLI in a slim Docker image
-  library_policy: PyYAML handles YAML nodes and source locations; standard library modules handle CLI, timing, JSON, and subprocess isolation.
+  runtime: Non-root Python 3.12.13 CLI in a digest-pinned slim Docker image
+  library_policy: PyYAML handles YAML nodes and source locations; jsonschema validates publication evidence; the standard library owns CLI, timing, JSON, and subprocess isolation.
   record_path: sdd/technical-decision.md
   rejected_options:
     - option: Rust CLI
@@ -88,6 +90,7 @@ architecture:
     - scanner owns composition and stable ordering
     - benchmark owns timing and environment evidence
     - validation owns the repository release gate
+    - reusable workflows own stack-specific build and test commands without importing scanner code
   rejected_alternatives:
     - style: microservices
       reason: adds deployment and network failure modes to a local static-analysis problem.
@@ -119,13 +122,15 @@ reuse:
     - harness
     - templates
     - skills
+    - benchmark-result-v2
+    - publish-benchmark-evidence
 benchmark:
   primary_metric: scan_time_ms
   unit: milliseconds
-  command: python -m ci_guardrails benchmark --fixtures benchmarks/fixtures --runs 3 --warmup 1
+  command: python -m ci_guardrails benchmark --fixtures benchmarks/fixtures --templates .github/workflows --runs 3 --warmup 1 --no-external
   result_path: benchmarks/results/guardrails-baseline.json
   publication_result_path: benchmarks/publication/guardrails-baseline-v2.json
-  evidence_status: current
+  evidence_status: pending
 release:
   docker: Dockerfile with pinned actionlint and zizmor versions
   no_secret_default_path: true

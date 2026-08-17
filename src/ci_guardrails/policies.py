@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import re
-from pathlib import Path
-from typing import Any, Iterable
+from collections.abc import Iterable
+from typing import Any
 
 from .models import Finding
 from .yaml_loader import WorkflowDocument
@@ -73,7 +73,7 @@ def _check_action_ref(
 ) -> list[Finding]:
     if not isinstance(value, str):
         return [_finding(document, "action-ref-type", "high", "action `uses` must be a string", path)]
-    if value.startswith("./") or value.startswith("docker://"):
+    if value.startswith(("./", "docker://")):
         return []
     if "@" not in value:
         return [_finding(document, "unpinned-action", "high", f"action is not pinned: {value}", path)]
@@ -145,7 +145,7 @@ def validate_workflow(document: WorkflowDocument) -> list[Finding]:
             )
         if job.get("uses"):
             findings.extend(_check_action_ref(document, job["uses"], job_path + ("uses",)))
-        if "timeout-minutes" not in job:
+        if not job.get("uses") and "timeout-minutes" not in job:
             findings.append(
                 _finding(
                     document,

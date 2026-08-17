@@ -3,8 +3,8 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Sequence
 
 from .benchmark import run_benchmark, write_result
 from .scanner import scan
@@ -43,6 +43,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     benchmark_parser = subparsers.add_parser("benchmark", help="measure a fixed local fixture set")
     benchmark_parser.add_argument("--fixtures", type=Path, default=Path("benchmarks/fixtures"))
+    benchmark_parser.add_argument("--templates", type=Path, default=Path(".github/workflows"))
     benchmark_parser.add_argument("--output", type=Path, default=Path("benchmarks/results/guardrails-baseline.json"))
     benchmark_parser.add_argument("--stdout", action="store_true")
     benchmark_parser.add_argument("--runs", type=int, default=3)
@@ -59,17 +60,47 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     if args.command == "scan":
-        result = scan(Path(args.path), include_external=not args.no_external, deterministic=args.deterministic)
-        _print_scan(result, args.output)
+        scan_result = scan(
+            Path(args.path),
+            include_external=not args.no_external,
+            deterministic=args.deterministic,
+        )
+        _print_scan(scan_result, args.output)
         threshold = _severity_threshold(args.fail_on)
         if args.fail_on == "any":
-            return 1 if result.findings else 0
-        return 1 if any({"low": 1, "medium": 2, "high": 3}[finding.severity] >= threshold for finding in result.findings) else 0
+            return 1 if scan_result.findings else 0
+        return (
+            1
+            if any(
+                {"low": 1, "medium": 2, "high": 3}[finding.severity] >= threshold
+                for finding in scan_result.findings
+            )
+            else 0
+        )
     if args.command == "benchmark":
-        result = run_benchmark(args.fixtures, args.runs, args.warmup, not args.no_external, args.deterministic)
-        write_result(result, None if args.stdout else args.output, stdout=args.stdout)
+        benchmark_result = run_benchmark(
+            args.fixtures,
+            args.templates,
+            args.runs,
+            args.warmup,
+            not args.no_external,
+            args.deterministic,
+        )
+        write_result(
+            benchmark_result,
+            None if args.stdout else args.output,
+            stdout=args.stdout,
+        )
         if not args.stdout:
-            print(json.dumps({"output": args.output.as_posix(), "findings": result["findings"]}, sort_keys=True))
+            print(
+                json.dumps(
+                    {
+                        "output": args.output.as_posix(),
+                        "findings": benchmark_result["findings"],
+                    },
+                    sort_keys=True,
+                )
+            )
         return 0
     root = args.root or _root_from_file()
     failures = validate_project(root, strict=args.strict)

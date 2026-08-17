@@ -1,5 +1,10 @@
 .git
 .portfolio
+!.portfolio/
+.portfolio/*
+!.portfolio/contracts/
+.portfolio/contracts/*
+!.portfolio/contracts/benchmark-result-v2.schema.json
 .portfolio-control
 .codex
 .claude

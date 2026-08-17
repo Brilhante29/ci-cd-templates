@@ -6,8 +6,9 @@ import re
 import shutil
 import subprocess
 import time
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 from .models import Finding, ToolStatus
 
@@ -16,7 +17,13 @@ _ACTIONLINT_DIAGNOSTIC = re.compile(r"^(?P<path>.+?):(?P<line>\d+):(?P<column>\d
 
 def _version(command: str) -> str | None:
     try:
-        completed = subprocess.run([command, "--version"], capture_output=True, text=True, timeout=5)
+        completed = subprocess.run(
+            [command, "--version"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
     except (OSError, subprocess.SubprocessError):
         return None
     output = (completed.stdout or completed.stderr).strip().splitlines()
@@ -39,6 +46,7 @@ def _run(command: list[str], cwd: Path) -> tuple[subprocess.CompletedProcess[str
         text=True,
         env=environment,
         timeout=60,
+        check=False,
     )
     return completed, (time.perf_counter() - started) * 1000
 

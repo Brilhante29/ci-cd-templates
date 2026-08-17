@@ -1,38 +1,20 @@
 # Reuse Improvement Review
 
-Project: `24 - ci-cd-templates`
+## Finding
 
-## Review points
+The kit selects language stacks but does not yet define the minimum executable CI contract that every stack profile must satisfy.
 
-- [x] after scaffold
-- [x] after architecture decision
-- [x] after first working slice
-- [x] after benchmark result
-- [x] before publication
+## Patch After Publication
 
-## Findings
+- Add a `ci-profile-v1` contract covering workflow identity, runtime, commands, permission policy, timeout, action pinning, checkout persistence, and exact-head execution evidence.
+- Add a `github-actions-reusable-workflow` skill mirrored for Codex and Claude.
+- Add Delivery macro guidance that separates static validation latency from hosted consumer build duration.
+- Reuse the negative policy fixtures without moving stack-specific commands into a universal script.
 
-| Finding | Classification | Kit Area | Action | Status |
-|---|---|---|---|---|
-| A deterministic analyzer status and finding schema is reusable | `patch_now` | `contracts` | keep the source, severity, path, line, and fingerprint fields stable | recorded |
-| A fixed fixture digest makes benchmark drift visible | `patch_now` | `metrics` | include digest, environment, and tool availability in benchmark JSON | recorded |
-| Docker pinning is project-specific because analyzer versions change | `reject` | `templates` | do not move repository-specific pins into the shared kit | rejected |
+## Rejected
 
-## Patch-now decisions
+- A generated universal workflow with arbitrary command inputs: unsafe and semantically weaker than five explicit profiles.
+- Organization-wide secrets or GitHub API dependency: incompatible with the local-first default.
+- Copying analyzer binaries or repository-specific version pins into every project.
 
-- The project uses the existing portfolio benchmark JSON shape and extends it with scan findings and tool evidence.
-- The project keeps the local-first, no-secret default path required by the component pack.
-
-## Backlog decisions
-
-- Add optional SARIF output if a later portfolio project needs code-scanning upload.
-
-## Rejected improvements
-
-- No shared policy database or hosted service was added; it would duplicate project logic and weaken offline proof.
-
-## Final gate
-
-- [x] Reusable improvements were patched or recorded.
-- [x] Project-specific implementation was not moved into the kit.
-- [x] Validation reflects the deterministic finding and benchmark contract.
+The promotion remains source-compatible: projects consume workflow files by immutable GitHub ref and consume the kit only for decisions, skills, and contracts.

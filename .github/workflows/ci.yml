@@ -14,7 +14,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
           persist-credentials: false
       - name: Build guardrails image
@@ -23,3 +23,26 @@ jobs:
         run: docker run --rm ci-cd-templates:ci validate --strict
       - name: Run deterministic benchmark
         run: docker run --rm ci-cd-templates:ci benchmark --runs 1 --warmup 0 --no-external --stdout
+
+  python-template:
+    uses: ./.github/workflows/reusable-python.yml
+
+  go-template:
+    uses: ./.github/workflows/reusable-go.yml
+    with:
+      working-directory: examples/go
+
+  node-template:
+    uses: ./.github/workflows/reusable-node.yml
+    with:
+      working-directory: examples/node
+
+  jvm-template:
+    uses: ./.github/workflows/reusable-jvm-gradle.yml
+    with:
+      working-directory: examples/jvm
+
+  terraform-template:
+    uses: ./.github/workflows/reusable-terraform.yml
+    with:
+      working-directory: examples/terraform

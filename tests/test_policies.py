@@ -1,6 +1,6 @@
-from pathlib import Path
 import tempfile
 import unittest
+from pathlib import Path
 
 from ci_guardrails.policies import validate_workflow
 from ci_guardrails.yaml_loader import load_workflow
@@ -47,3 +47,64 @@ jobs:
         )
         rule_ids = {finding.rule_id for finding in findings}
         self.assertTrue({"dangerous-trigger", "write-all-permissions", "unpinned-action", "script-injection"} <= rule_ids)
+
+    def test_local_reusable_workflow_call_does_not_require_caller_timeout(self) -> None:
+        findings = self._findings(
+            """name: caller
+on: [push]
+permissions:
+  contents: read
+jobs:
+  verify:
+    uses: ./.github/workflows/reusable-python.yml
+"""
+        )
+        self.assertEqual([], findings)
+
+    def test_structural_and_credential_rules_are_reported(self) -> None:
+        findings = self._findings(
+            """name: ""
+permissions: read-all
+jobs:
+  broken:
+    steps:
+      - uses: 123
+      - uses: actions/checkout@1111111111111111111111111111111111111111
+      - credentials: plaintext
+"""
+        )
+        rule_ids = {finding.rule_id for finding in findings}
+        self.assertTrue(
+            {
+                "workflow-name",
+                "workflow-trigger",
+                "permissions-type",
+                "job-runner-required",
+                "job-timeout",
+                "action-ref-type",
+                "checkout-credentials",
+                "inline-credentials",
+            }
+            <= rule_ids
+        )
+
+    def test_missing_jobs_permissions_and_unpinned_action_are_reported(self) -> None:
+        findings = self._findings("name: unsafe\non: push\n")
+        self.assertEqual(
+            {"missing-permissions", "jobs-required"},
+            {finding.rule_id for finding in findings},
+        )
+
+        findings = self._findings(
+            """name: unsafe
+on: [push]
+permissions: {}
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    steps:
+      - uses: actions/checkout
+"""
+        )
+        self.assertIn("unpinned-action", {finding.rule_id for finding in findings})
