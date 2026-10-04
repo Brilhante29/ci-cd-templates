@@ -35,6 +35,17 @@ def digest(data: bytes) -> str:
     return "sha256:" + hashlib.sha256(data).hexdigest()
 
 
+def text_digests(data: bytes) -> set[str]:
+    """Digests of a text file with LF and with CRLF line endings.
+
+    The repository stores text with LF (.gitattributes), but a producer on a
+    CRLF checkout hashes the CRLF bytes; accepting both keeps the check exact
+    on content while making it independent of the verifier's platform.
+    """
+    lf = data.replace(b"\r\n", b"\n")
+    return {digest(lf), digest(lf.replace(b"\n", b"\r\n"))}
+
+
 def git_blob(commit: str, path: str) -> bytes:
     completed = subprocess.run(
         ["git", "-C", str(ROOT), "show", f"{commit}:{path}"],
@@ -115,7 +126,7 @@ def main() -> None:
         "dependency lock digest mismatch",
     )
     require(
-        v2["provenance"]["artifact_digest"] == digest(V1_PATH.read_bytes()),
+        v2["provenance"]["artifact_digest"] in text_digests(V1_PATH.read_bytes()),
         "V1 artifact digest mismatch",
     )
     for field in ("image_digest", "artifact_digest"):

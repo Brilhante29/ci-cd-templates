@@ -51,7 +51,11 @@ def validate_project(root: Path, strict: bool = True) -> list[str]:
     readme = root / "README.md"
     if readme.is_file():
         content = readme.read_text(encoding="utf-8")
-        _require(content.startswith("# #24 ci-cd-templates"), "README must open with #24", failures)
+        _require(
+            content.startswith("# CI/CD Templates: "),
+            "README must open with the descriptive project title",
+            failures,
+        )
         _require("scan_time_ms" in content and "findings" in content, "README must report benchmark metrics", failures)
 
     for relative in ("project.yaml", "sdd/spec.md", "sdd/architecture-decision.md", "sdd/technical-decision.md", "sdd/benchmark-plan.md", "sdd/agent-handoff.md", "sdd/reuse-improvement-review.md"):
