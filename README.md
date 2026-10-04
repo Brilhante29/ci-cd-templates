@@ -1,12 +1,23 @@
-# #24 ci-cd-templates
+# CI/CD Templates: Reusable, Security-Gated GitHub Actions Workflows
 
-**Benchmark:** `104.945 ms` median scan latency across `3` measured runs after `1` warmup.
+**Five reusable workflows (Python, Go, Node, JVM/Gradle, Terraform) with an offline security gate:** `0` findings in the templates, `7/7` expected findings caught in unsafe fixtures, and `104.945 ms` median scan latency across `3` measured runs after `1` warm-up.
 
-**Correctness gate:** `5` reusable workflows, `6` workflow files scanned, `0` template findings, and `7/7` expected findings detected in the unsafe policy fixtures.
+[![CI](https://github.com/Brilhante29/ci-cd-templates/actions/workflows/ci.yml/badge.svg)](https://github.com/Brilhante29/ci-cd-templates/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-2088FF?logo=githubactions&logoColor=white)
+
+## Why this exists
+
+CI pipelines are code with production credentials attached, and they are usually copy-pasted between repositories. Every copy drifts, and the common mistakes are security mistakes: actions pinned to mutable tags, `write-all` permissions, checkout credentials left on disk, `pull_request_target` running untrusted code, or event fields interpolated straight into shell commands. This repository centralizes the pipelines and guards them:
+
+- one reusable workflow per stack, each exercised by this repository's own CI against a minimal fixture;
+- every external action pinned to a full commit SHA, read-only permissions, no persisted credentials, bounded jobs;
+- a scanner (local policies plus actionlint and offline zizmor) that must find **zero** problems in the templates and **all seven** planted problems in unsafe fixtures, so a broken scanner cannot pass silently;
+- everything runs offline in a non-root container with no token.
 
 **Benchmark metric:** `scan_time_ms` measures one deterministic pass over the policy fixtures and all reusable workflow files; `findings` and `template_findings` are correctness gates.
 
-**Proves:** one repository can execute and govern reusable GitHub Actions pipelines for Python, Go, Node, JVM/Gradle, and Terraform while keeping the security gate offline, deterministic, and free of credentials.
+## Results
 
 | Result | Value |
 |---|---:|
@@ -38,9 +49,9 @@ jobs:
     uses: Brilhante29/ci-cd-templates/.github/workflows/reusable-python.yml@8bfd94a1a8fd6186b717bc7be53d61e92d419b2d
 ```
 
-## Run
+## Quickstart
 
-```powershell
+```bash
 docker build -t ci-cd-templates .
 docker run --rm --network none ci-cd-templates
 docker run --rm --network none ci-cd-templates validate --strict
@@ -82,3 +93,22 @@ The reusable workflows and Python scanner share contracts, not source code. Mode
 - Sources and licenses: [`REFERENCES.md`](REFERENCES.md)
 
 The benchmark measures static validation latency, not the hosted duration of arbitrary consumer builds. Actual template execution is proved by the exact-head GitHub Actions jobs, because build duration belongs to the consuming stack and runner.
+
+## How this repository is built
+
+The project follows the spec-driven workflow of [portfolio-reuse-kit](https://github.com/Brilhante29/portfolio-reuse-kit), and [`project.yaml`](project.yaml) records the architecture, stack, and rejected alternatives. Development is AI-assisted and human-governed: [`AGENTS.md`](AGENTS.md) and [`CLAUDE.md`](CLAUDE.md) hold the coding-agent instructions, while tests, validators, and CI decide what gets published.
+
+## Related work
+
+- [terraform-aws-baseline](https://github.com/Brilhante29/terraform-aws-baseline): infrastructure validated by the Terraform profile.
+- [load-test-suite](https://github.com/Brilhante29/load-test-suite): CI smoke benchmarks kept separate from committed evidence.
+- [portfolio-reuse-kit](https://github.com/Brilhante29/portfolio-reuse-kit): the shared standard these templates serve.
+
+## Author
+
+**Guilherme Brilhante**, software engineer working on scalable backends and production AI.
+[LinkedIn](https://www.linkedin.com/in/guilhermefreirebrilhanteseveriano/) · [GitHub](https://github.com/Brilhante29) · [Publications](https://dblp.org/pid/353/6812.html)
+
+## License
+
+[MIT](LICENSE).
